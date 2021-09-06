@@ -2,17 +2,16 @@ import numpy as np
 import pandas as pd
 
 
+
 def _fill_zero(df, epsilon=1e-6):
     if any(df.isnull().sum()):
         df.dropna(inplace=True)
     return df.replace(0, epsilon)
 
-
-def _moving_avg(df):
-    df[df.columns[1:]] = df[df.columns[1:]].rolling(10).mean()
+def _moving_avg(df, window=10):
+    df[df.columns[1:]] = df[df.columns[1:]].rolling(window).mean()
     df.dropna(how='any', axis=0, inplace=True)
     return _fill_zero(df)
-
 
 def _add_datatime_tag(df, name_tag=False):
     df['date'] = pd.to_datetime(df['date'], format='%Y%m%d')
@@ -21,18 +20,16 @@ def _add_datatime_tag(df, name_tag=False):
     df = df.sort_values(by=['date'])
     return df
 
-
 def _pct_change(df, c_min, c_max):
     df = df.pct_change()
     df.dropna(axis=0, inplace=True)
     df = df.clip(c_min, c_max, axis=1)
     return df
 
-
 def _normalize_pct(df, groups, n_pct=20):
-    pct = n_pct / 100 if n_pct > 1 else n_pct
+    pct = n_pct/100 if n_pct>1 else n_pct
     times = sorted(df.index.values)
-    last_20pct = sorted(df.index.values)[-int(pct * len(times))]
+    last_20pct = sorted(df.index.values)[-int(pct*len(times))]
 
     def normalize(cols):
         if isinstance(cols, str):
@@ -49,8 +46,7 @@ def _normalize_pct(df, groups, n_pct=20):
 
     return df
 
-
-def _split_train_test(df, valid_pct=10, test_pct=10):
+def _split_train_test(df, valid_pct = 10, test_pct=10):
     df.reset_index(inplace=True)
     df.drop('index', axis=1, inplace=True)
     if test_pct > 1:
@@ -58,12 +54,12 @@ def _split_train_test(df, valid_pct=10, test_pct=10):
     if valid_pct > 1:
         valid_pct /= 100
 
-    n_valid = int(len(df) * valid_pct)
-    n_test = int(len(df) * test_pct)
+    n_valid = int(len(df)*valid_pct)
+    n_test = int(len(df)*test_pct)
     n_train = int(len(df) - n_valid - n_test)
 
     df_train = df.iloc[:n_train]
-    df_valid = df.iloc[n_train:n_train + n_valid]
+    df_valid = df.iloc[n_train:n_train+n_valid]
     df_test = df.iloc[-n_test:]
 
     train_data = df_train.values
@@ -71,21 +67,21 @@ def _split_train_test(df, valid_pct=10, test_pct=10):
     test_data = df_test.values
     return train_data, valid_data, test_data
 
-
 def _split_label(df, label_idx, seq_len, pred_len):
     X_data, y_data = [], []
-    for i in range(seq_len, len(df) - pred_len + 1):
-        X_data.append(df[i - seq_len: i])
-        y_data.append(df[i:i + pred_len, label_idx].flatten())
+    # if len(label_idx)==1:
+    #     label_idx = label_idx[0]
+    for i in range(seq_len, len(df)-pred_len+1):
+        X_data.append(df[i-seq_len: i])
+        y_data.append(df[i:i+pred_len, label_idx].flatten())
     return np.array(X_data), np.array(y_data)
-
 
 def load_data_with_preprocessing(path, options):
     df = pd.read_csv(path)
     df.drop(['code', 'name', 'section', 'n_stock'], axis=1, inplace=True)
 
     df = _fill_zero(df)
-    df = _moving_avg(df)
+    df = _moving_avg(df, options.get('window'))
     df = _add_datatime_tag(df, name_tag=False)
 
     df.drop('date', axis=1, inplace=True)
