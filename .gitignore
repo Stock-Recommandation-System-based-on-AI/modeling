@@ -1,5 +1,4 @@
 .idea/
 bluesunb/preprocessing/__pycache__/
-illstandtall/data/kospi50-1980-2021.csv
-illstandtall/data/preprocessed_kospi50_daily_stock_chart.csv
-illstandtall/.ipynb_checkpoints
+illstandtall/data/*
+illstandtall/.ipynb_checkpoints/*
