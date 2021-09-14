@@ -80,5 +80,5 @@ def prepare_data(path, **kwargs):
     window_size = kwargs['window_size']
     market_data = [__stocks_window_split(*m, window_size) for m in market_data]
     stock_data = [__stocks_window_split(*s, window_size) for s in stock_data]
-    return market_data, stock_data
+    return market_data, stock_data, df
 
